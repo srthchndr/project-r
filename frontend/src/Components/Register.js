@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import AuthService from '../Service/Auth-service';
 
-function Login() {
+function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const role = 'investor';
 
   const loginRequest = (e) => {
     e.preventDefault();
-    const a = AuthService.login(email, password);
+    const a = AuthService.register(email, password, firstName, lastName, role);
+    console.log(a);
   };
 
   return (
@@ -26,11 +29,23 @@ function Login() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+        <input
+          type='text'
+          name='firstName'
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+        />
+        <input
+          type='text'
+          name='lastName'
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+        />
+
         <input type='submit' />
       </form>
-      <Link to='/register'>Register</Link>
     </div>
   );
 }
 
-export default Login;
+export default Register;
