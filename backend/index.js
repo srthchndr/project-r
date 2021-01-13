@@ -14,10 +14,10 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 app.use(
   expressJwt({
-    secret: 'todo-app-super-shared-secret',
+    secret: process.env.ACCESS_TOKEN_SECRET,
     algorithms: ['HS256'],
     requestProperty: 'auth',
-  }).unless({ path: ['/api/auth', '/register', '/api/logout'] })
+  }).unless({ path: ['/api/auth', '/register'] })
 );
 
 var checkRefreshNeeded = function (req, res, next) {
@@ -35,9 +35,9 @@ var checkRefreshNeeded = function (req, res, next) {
     req.headers.authorization.split(' ')[0] === 'Bearer'
   ) {
     let token = req.headers.authorization.split(' ')[1];
-    let decodedToken = jwt_decode(token);
+    let user = jwt_decode(token);
     let d1 = new Date();
-    let d2 = new Date(decodedToken.exp * 1000);
+    let d2 = new Date(user.exp * 1000);
     let timeRemaining = (d2 - d1) / 1000;
     console.log(timeRemaining);
     if (timeRemaining < 60) {
@@ -185,8 +185,9 @@ app.post('/register', async (req, res) => {
   }
 });
 
-app.delete('/api/logout', (req, res) => {
-  User.findOne({ email: req.body.email }, (err, doc) => {
+app.delete('/logout', (req, res) => {
+  console.log(req.auth);
+  User.findOne({ email: req.auth.email }, (err, doc) => {
     if (err) return res.sendStatus(403);
     doc.refreshToken = undefined;
     doc.save();

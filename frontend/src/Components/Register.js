@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import AuthService from '../Service/Auth-service';
 
 function Register() {
@@ -7,16 +8,22 @@ function Register() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const role = 'investor';
+  const history = useHistory();
 
-  const loginRequest = (e) => {
+  const registrationRequest = async (e) => {
     e.preventDefault();
-    const a = AuthService.register(email, password, firstName, lastName, role);
-    console.log(a);
+    await AuthService.register(email, password, firstName, lastName, role);
+    if (AuthService.getCurrentUserToken()) {
+      console.log('In redirecting block');
+      history.push('/');
+    } else {
+      console.log('False');
+    }
   };
 
   return (
     <div>
-      <form onSubmit={loginRequest}>
+      <form onSubmit={registrationRequest}>
         <input
           type='text'
           name='email'

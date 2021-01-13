@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import AuthService from '../Service/Auth-service';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const history = useHistory();
 
-  const loginRequest = (e) => {
+  const loginRequest = async (e) => {
     e.preventDefault();
-    const a = AuthService.login(email, password);
+    await AuthService.login(email, password);
+    if (AuthService.getCurrentUserToken()) {
+      history.push('/');
+    }
   };
 
   return (

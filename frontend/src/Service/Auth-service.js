@@ -18,9 +18,19 @@ class AuthService {
       });
   }
 
-  logout() {
+  logout(userEmail) {
     //Remove access token
+    let token = JSON.parse(localStorage.getItem('user')).accessToken;
+
     localStorage.removeItem('user');
+    return axios
+      .delete('/logout', {
+        headers: { authorization: `Bearer ${token}` },
+        body: { email: userEmail },
+      })
+      .then((res) => {
+        console.log(res);
+      });
   }
 
   register(email, password, firstName, lastName, role) {
@@ -34,9 +44,10 @@ class AuthService {
         role,
       })
       .then((res) => {
-        // res.status === 200 ? <Redirect to='/' /> : <Register />;
-        console.log(res.status);
-        console.log(res.data.accessToken);
+        console.log(res);
+        if (res.data.accessToken) {
+          localStorage.setItem('user', JSON.stringify(res.data));
+        }
       })
       .catch((err) => {
         console.log(err);
