@@ -14,7 +14,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 app.use(
   expressJwt({
-    secret: 'todo-app-super-shared-secret',
+    secret: process.env.ACCESS_TOKEN_SECRET,
     algorithms: ['HS256'],
     requestProperty: 'auth',
   }).unless({ path: ['/api/auth', '/register'] })
@@ -35,9 +35,9 @@ var checkRefreshNeeded = function (req, res, next) {
     req.headers.authorization.split(' ')[0] === 'Bearer'
   ) {
     let token = req.headers.authorization.split(' ')[1];
-    let decodedToken = jwt_decode(token);
+    let user = jwt_decode(token);
     let d1 = new Date();
-    let d2 = new Date(decodedToken.exp * 1000);
+    let d2 = new Date(user.exp * 1000);
     let timeRemaining = (d2 - d1) / 1000;
     console.log(timeRemaining);
     if (timeRemaining < 60) {
@@ -68,20 +68,58 @@ db.once('open', function () {
   console.log('Connected to DB');
 });
 
-app.post('/api/auth', function (req, res) {
-  console.log(req.body);
+// app.post('/api/auth', function (req, res) {
+//   console.log(req.body);
 
-  const body = req.body;
+//   const body = req.body;
 
-  //check username and password in db and send token if valid user record is found
-  if (body.password != 'password') return res.sendStatus(401);
+//   //check username and password in db and send token if valid user record is found
+//   if (body.password != 'password') return res.sendStatus(401);
 
-  let token = jwt.sign(
-    { userID: 2, role: 'admin' },
-    'todo-app-super-shared-secret',
-    { expiresIn: '75000' }
-  );
-  res.send({ auth_token: token, refresh_token: 'RefreshToken' });
+//   let token = jwt.sign(
+//     { userID: 2, role: 'admin' },
+//     'todo-app-super-shared-secret',
+//     { expiresIn: '75000' }
+//   );
+//   res.send({ auth_token: token, refresh_token: 'RefreshToken' });
+// });
+app.post('/api/auth', async (req, res) => {
+  try {
+    console.log(req.body);
+    const user = await User.findOne({ email: req.body.email });
+    tokenUser = {
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    };
+    if (user) {
+      const result = await bcrypt.compare(req.body.password, user.password);
+      if (result) {
+        const accessToken = generateAccessToken(tokenUser);
+        const refreshToken = jwt.sign(
+          tokenUser,
+          process.env.REFRESH_TOKEN_SECRET
+        );
+
+        const updateRes = await User.findOneAndUpdate(
+          { email: user.email },
+          { refreshToken: refreshToken }
+        );
+        await updateRes.save();
+
+        res.json({ accessToken: accessToken, refreshToken: refreshToken });
+      } else {
+        console.log('Passwords does not match');
+        res.sendStatus(401);
+      }
+    } else {
+      console.log('User not found');
+      res.sendStatus(403);
+    }
+  } catch (err) {
+    console.log('Error: ' + err);
+    res.sendStatus(500);
+  }
 });
 
 app.post('/refresh', function (req, res) {
@@ -122,21 +160,39 @@ app.post('/register', async (req, res) => {
       res.send('Email already exists, please use new email');
     } else {
       req.body.password = await bcrypt.hash(req.body.password, 7);
-      // bcrypt.hash(req.body.password, 7).then(function(result) {
-      //     console.log(result); //
-      //     req.body.password = result;
-      // })
+      bcrypt.hash(req.body.password, 7).then(function (result) {
+        console.log(result); //
+        req.body.password = result;
+      });
+      let userObj = {
+        email: req.body.email,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+      };
+      const refreshToken = jwt.sign(userObj, process.env.REFRESH_TOKEN_SECRET);
+      const accessToken = generateAccessToken(userObj);
       const regUser = new User(req.body);
+      regUser.refreshToken = refreshToken;
       regUser.save((err, output) => {
         if (err) return console.error('ERROR: ' + err);
         console.log('Saved the user into DB');
         console.log(output);
       });
-      res.send('Received response and is successful');
+      res.json({ accessToken: accessToken, refreshToken: refreshToken });
     }
   } catch (err) {
     console.error('ERROR: ' + err);
   }
+});
+
+app.delete('/logout', (req, res) => {
+  console.log(req.auth);
+  User.findOne({ email: req.auth.email }, (err, doc) => {
+    if (err) return res.sendStatus(403);
+    doc.refreshToken = undefined;
+    doc.save();
+    return res.send('Successfully logged out. Thank you!');
+  });
 });
 
 app.get('/testdata', (req, res, next) => {
