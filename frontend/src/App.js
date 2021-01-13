@@ -1,9 +1,10 @@
 import './App.css';
 import Login from './Components/Login';
-import { Route, Switch } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import Register from './Components/Register';
 import Profile from './Components/Profile';
 import { ProtectedRoute } from './Service/ProtectedRoute';
+import Sidebar from './components/Sidebar/Sidebar';
 
 function App() {
   // const user = localStorage.getItem('user');
@@ -18,6 +19,12 @@ function App() {
       </Switch>
     </div>
   );
+//     <>
+//       <Router>
+//         <Sidebar />
+//       </Router>
+//     </>
+//   )
 }
 
 export default App;
