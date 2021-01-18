@@ -3,7 +3,7 @@
 body {
   margin: 0;
   background: #ff8800;
-  font-family: roboto;
+  /* font-family: roboto; */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -96,7 +96,7 @@ code {
   color: darkmagenta;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 20px;
+  padding: 20px 20px;
   list-style: none;
   height: 20px;
   text-decoration: none;
@@ -123,4 +123,29 @@ code {
 .submenu.sidebar-link:hover {
   background: rgb(51, 29, 1);
   border-color: orangered;
+}
+
+.registration-block {
+  height: 300px;
+  width: 50vw;
+  max-width: 500px;
+  /* border: 2px solid #474a4d; */
+  border-radius: 10px;
+  margin: auto;
+  margin-top: 25px;
+}
+
+.reg-form-errors{
+  background-color: rgba(0, 0, 0, 0.85);
+  padding: 5px;
+  color: red;
+  margin-bottom: 10px;
+  border-radius: 10px;
+}
+
+.reg-form-errors p {  
+  font-weight: bolder;
+  font-style: italic;
+  margin: 2px;
+  padding-left: 20px;
 }
